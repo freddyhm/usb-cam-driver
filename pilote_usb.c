@@ -14,10 +14,13 @@
 #include <linux/spinlock.h>
 #include <linux/cred.h>
 #include <linux/semaphore.h>
-#include "ring_buffer.c"
 
 MODULE_AUTHOR("Freddy Hidalgo-Monchez");
 MODULE_LICENSE("Dual BSD/GPL");
+
+static ssize_t module_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos);
+static int module_open(struct inode *inode, struct file *filp);
+static int module_release(struct inode *inode, struct file *filp);
 
 static struct file_operations myModule_fops = {
 	.owner 	 = THIS_MODULE,
@@ -26,9 +29,7 @@ static struct file_operations myModule_fops = {
 	.release = module_release,
 };
 
-static ssize_t module_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos);
-static int module_open(struct inode *inode, struct file *filp);
-static int module_release(struct inode *inode, struct file *filp);
+
 
 static int  pilote_init (void);
 static void pilote_exit (void);
