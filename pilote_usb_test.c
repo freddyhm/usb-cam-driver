@@ -2,6 +2,7 @@
 #include <unistd.h>     /* exit */
 #include <sys/ioctl.h> 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MAJOR_NUM 180
 #define IOCTL_STREAMON _IO(MAJOR_NUM, 0x30)
