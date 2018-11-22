@@ -66,7 +66,7 @@ static struct my_pilote_usb{
 }pilote_usb_data;
 
 static struct usb_class_driver class_driver = {
-  .name = "ele784-%d",
+  .name = "ele784-usb",
   .fops = &fops,
   .minor_base = DEV_MINOR,
 };

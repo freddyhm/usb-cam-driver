@@ -12,7 +12,7 @@
 
 int main(void){
     int file_desc, ret_val;
-    file_desc = open("/dev/ele784-4", 0);
+    file_desc = open("/dev/ele784-usb", 0);
     if (file_desc < 0) {
         printf ("Can't open device file\n");
         exit(-1);
