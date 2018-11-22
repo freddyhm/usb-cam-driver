@@ -13,10 +13,14 @@
 #include <linux/kthread.h>
 #include <linux/cdev.h>
 #include <linux/usb.h>
+#include <linux/slab.h>
 #include "usbvideo.h"
 
 #define MAJOR_NUM 180
+#define IOCTL_STREAMON _IO(MAJOR_NUM, 0x30)
+#define IOCTL_STREAMOFF _IO(MAJOR_NUM, 0x40)
 #define IOCTL_PANTILT _IO(MAJOR_NUM, 0x60)
+#define IOCTL_PANTILT_RESET _IO(MAJOR_NUM, 0x70)
 
 #define DEV_MINOR       0x00
 #define DEV_MINORS      0x01
@@ -103,7 +107,7 @@ static int module_probe(struct usb_interface *intf, const struct usb_device_id *
         usb_register_dev(intf, &class_driver);
         usb_set_interface(dev, 1, 4);
 
-         printk("interface set");
+        printk("interface set");
     }
 
    
@@ -124,17 +128,36 @@ static void module_disconnect(struct usb_interface *intf){
 
 long module_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
 
-    printk("in IOCTL");
-  struct usb_interface *interface = file->private_data;
-  struct usb_device *udev = interface_to_usbdev(interface);
+    printk("in IOCTL!! %d", cmd);
+    struct usb_interface *interface = file->private_data;
+    struct usb_device *udev = interface_to_usbdev(interface);
 
-  switch (cmd) {
-      
-    case IOCTL_PANTILT:
-        printk("Received a tilt command");
-  }
+     
+    int data = 0x03;
+    int response;
 
-  return 0;
+    int buf[4];
+    buf[2] = 0x80;
+    buf[3] = 0xFF;
+
+    switch (cmd) {
+        case IOCTL_PANTILT:
+            response = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),0x01, USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE, 0x0100, 0x0900, &buf, 4, 0);
+            break;
+        case IOCTL_PANTILT_RESET:
+            response = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),0x01, USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE, 0x0200, 0x0900, &data, 1, 0);
+            break;  
+        case IOCTL_STREAMON:
+            response = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),0x0B, USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_INTERFACE, 0x0004, 0x0001, NULL, 0, 0);
+            break;
+        case IOCTL_STREAMOFF:
+            response = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),0x0B, USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_INTERFACE, 0x0000, 0x0001, NULL, 0, 0);
+            break;
+    }
+
+    printk("tilt command response: %d", response);
+
+    return 0;
 }
 
 
