@@ -15,15 +15,17 @@
 #include <linux/usb.h>
 #include <linux/slab.h>
 #include "usbvideo.h"
+#include "ioctl_cmds.h"
 
-#define MAJOR_NUM 180
-#define IOCTL_STREAMON _IO(MAJOR_NUM, 0x30)
-#define IOCTL_STREAMOFF _IO(MAJOR_NUM, 0x40)
-#define IOCTL_PANTILT _IO(MAJOR_NUM, 0x60)
-#define IOCTL_PANTILT_RESET _IO(MAJOR_NUM, 0x70)
+#define DEV_MINOR		0x00
+#define DEV_MINORS	0x01
 
-#define DEV_MINOR       0x00
-#define DEV_MINORS      0x01
+#define SET_CUR		0x01
+
+#define GET_CUR		0x81
+#define GET_MIN 		0x82
+#define GET_MAX 		0x83
+#define GET_RES 		0x84
 
 MODULE_AUTHOR("Freddy Hidalgo-Monchez");
 MODULE_LICENSE("Dual BSD/GPL");
@@ -33,6 +35,9 @@ static int module_open(struct inode *inode, struct file *file);
 static int module_probe(struct usb_interface *intf, const struct usb_device_id *devid);
 static void module_disconnect(struct usb_interface *intf);
 long module_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+void grab(struct usb_interface *intf, struct usb_device *dev);
+static void complete_callback(struct urb *urb);
+
 //static int  pilote_init (void);
 //static void pilote_exit (void);
 
@@ -40,7 +45,7 @@ long module_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
 // driver can accept
 // makes sure the callback function in the USB driver is called
 static struct usb_device_id pilote_usb_id [] = {
-    {USB_DEVICE(0x046d, 0x0994)},
+    {USB_DEVICE(0x046d, 0x0994)},				// à vérifier dans un terminal avec 'lsusb' si la caméra n'est pas le #14.
     {}
 };
 
@@ -63,10 +68,11 @@ static struct file_operations fops = {
 static struct my_pilote_usb{
     struct usb_host_interface *interface;
     struct usb_device *dev;
+    struct urb *myUrb[5];
 }pilote_usb_data;
 
 static struct usb_class_driver class_driver = {
-  .name = "ele784-usb",
+  .name = "ele784",
   .fops = &fops,
   .minor_base = DEV_MINOR,
 };
