@@ -15,7 +15,9 @@ int moveRight();
 int moveUp();
 int moveDown();
 int resetPosition();
-int getValue();
+int setParam();
+int getParam();
+int getGrab();
 
 /*				Global Variable				*/
 int file_desc;
